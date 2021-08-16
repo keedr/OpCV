@@ -175,7 +175,7 @@ void MedianFilter(Mat& image, int halfSize)
 }
 
 
-void GaussianFilter(Mat& image, int kernelSize)
+void MeanFilter(Mat& image, int kernelSize)
 {
     Mat tempImage;
 
@@ -240,7 +240,7 @@ void GaussianFilter(Mat& image, int kernelSize)
 }
 
 
-void GaussianBlur(Mat& image, int kernelSize)
+void GaussianFilter(Mat& image, int kernelSize)
 {
     Mat tempImage;
 
@@ -395,6 +395,45 @@ void Sobel(Mat& image)
 }
 
 
+void HistogramEqualization(Mat& image)
+{
+    Mat tempImage;
+
+    image.copyTo(tempImage);
+
+    auto imageChannels = image.channels();
+
+    std::vector<std::vector<int>> values(imageChannels, std::vector<int>(tempImage.rows * tempImage.cols));
+    auto index = 0;
+    for (auto i = 0; i < tempImage.rows; i++)
+    {
+        for (auto j = 0; j < tempImage.cols; j++)
+        {
+            for (auto channel = 0; channel < imageChannels; channel++)
+            {
+                unsigned char* pixelValuePtr = tempImage.ptr(i) + (j * imageChannels) + channel;
+
+                values[channel][index] = *pixelValuePtr;
+            }
+            index++;
+        }
+    }
+    std::vector<std::vector<double>> amount(imageChannels, std::vector<double>(255, 0.0));
+    for (auto i = 0; i < 255; i++)
+    {
+        for (auto channels = 0; channels < imageChannels; channels++)
+        {
+            amount[channels][i] = std::count(begin(values[channels]), end(values[channels]), i);
+            amount[channels][i] /= tempImage.rows * tempImage.cols;
+            if (i > 1)
+            {
+                amount[channels][i] += amount[channels][i - 1];
+            }
+        }
+    }
+}
+
+
 int main(int argv, char** argc)
 {
     Mat test = imread("2.jpg", IMREAD_UNCHANGED);
@@ -405,7 +444,7 @@ int main(int argv, char** argc)
     //Mat1b a(test.rows, test.cols, 255);
     //Monochrome(test3);
     //SmoothingFilter(test2, 9);
-    MedianFilter(test2, 2);
+    HistogramEqualization(test2);
     //GaussianFilter(test, 5);
     //sobel(test2);
     imshow("test", test);
