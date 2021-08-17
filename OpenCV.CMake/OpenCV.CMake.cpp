@@ -425,10 +425,36 @@ void HistogramEqualization(Mat& image)
         {
             amount[channels][i] = std::count(begin(values[channels]), end(values[channels]), i);
             amount[channels][i] /= tempImage.rows * tempImage.cols;
+            amount[channels][i] = std::round(amount[channels][i] * 10000) / 10000;
+            if (amount[channels][i] > 1.0)
+            {
+                amount[channels][i] = 0.0;
+            }
             if (i > 1)
             {
                 amount[channels][i] += amount[channels][i - 1];
             }
+        }
+    }
+    for (auto i = 0; i < 255; i++)
+    {
+        for (auto channels = 0; channels < imageChannels; channels++)
+        {
+            amount[channels][i] *= 255;
+            amount[channels][i] = std::round(amount[channels][i]);
+        }
+    }
+    index = 0;
+    for (auto i = 0; i < tempImage.rows; i++)
+    {
+        for (auto j = 0; j < tempImage.cols; j++)
+        {
+            for (auto channel = 0; channel < imageChannels; channel++)
+            {
+                unsigned char* pixelValuePtr = image.ptr(i) + (j * imageChannels) + channel;
+                *pixelValuePtr = amount[channel][values[channel][index]];
+            }
+            index++;
         }
     }
 }
@@ -436,7 +462,7 @@ void HistogramEqualization(Mat& image)
 
 int main(int argv, char** argc)
 {
-    Mat test = imread("2.jpg", IMREAD_UNCHANGED);
+    Mat test = imread("F:\\resoursesVS\\OpCVFilt\\OpenCV.CMake\\8.jpg", IMREAD_UNCHANGED);
     Mat test2;
     //Mat test3;
     test.copyTo(test2);
